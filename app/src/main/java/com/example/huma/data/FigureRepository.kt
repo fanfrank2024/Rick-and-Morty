@@ -5,6 +5,16 @@ class FigureRepository(
 ) {
 
     suspend fun getFigures(): List<Figure> {
-        return apiService.getFigures()
+        val allFigures = mutableListOf<Figure>()
+        var currentPage = 1
+
+        while (true) {
+            val response = apiService.getFigures(currentPage)
+            allFigures.addAll(response.results)
+
+            if (response.info.next == null) break
+            currentPage++
+        }
+        return allFigures
     }
 }

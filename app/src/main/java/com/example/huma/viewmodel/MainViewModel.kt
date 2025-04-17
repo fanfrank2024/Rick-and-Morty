@@ -18,7 +18,7 @@ class MainViewModel @Inject constructor(
     private val _figures = MutableStateFlow<List<Figure>>(emptyList())
     val figures: StateFlow<List<Figure>> = _figures
 
-    fun getFigures() {
+    private fun getFigures() {
         viewModelScope.launch {
             try {
                 _figures.value = figureRepository.getFigures()

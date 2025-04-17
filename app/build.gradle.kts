@@ -65,6 +65,7 @@ dependencies {
     implementation(libs.logging.interceptor)
     implementation(libs.hilt.android)
     kapt(libs.hilt.android.compiler)
+    implementation(libs.coil)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
