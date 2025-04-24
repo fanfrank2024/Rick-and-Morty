@@ -1,5 +1,7 @@
 [versions]
+accompanistFlowlayout = "0.32.0"
 agp = "8.8.1"
+coilGif = "2.4.0"
 converterGson = "2.12.1"
 converterGsonVersion = "2.9.0"
 kotlin = "2.0.0"
@@ -23,7 +25,9 @@ hilt = "2.47"
 coil = "2.5.0"
 
 [libraries]
+accompanist-flowlayout = { module = "com.google.accompanist:accompanist-flowlayout", version.ref = "accompanistFlowlayout" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+coil-gif = { module = "io.coil-kt:coil-gif", version.ref = "coilGif" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 converter-gson-v290 = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGsonVersion" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

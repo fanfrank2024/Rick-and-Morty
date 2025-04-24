@@ -11,6 +11,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.example.huma.compose.Dashboard
+import com.example.huma.compose.LoadingSpinner
 import com.example.huma.ui.theme.HumaTheme
 import com.example.huma.viewmodel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -25,6 +26,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             HumaTheme {
                 val figures by viewModel.figures.collectAsState(initial = emptyList())
+
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Dashboard(
                         modifier = Modifier.padding(innerPadding),
