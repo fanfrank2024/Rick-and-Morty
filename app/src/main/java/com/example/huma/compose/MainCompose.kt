@@ -1,30 +1,35 @@
 package com.example.huma.compose
 
-import android.service.autofill.OnClickAction
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowColumn
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -32,19 +37,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.modifier.modifierLocalOf
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.Role.Companion.Image
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.huma.R
 import com.example.huma.activity.ui.theme.HumaTheme
 import com.example.huma.data.Figure
-import com.example.huma.data.Location
-import com.example.huma.data.Origin
+
 
 @Composable
 fun Dashboard(
@@ -52,27 +53,17 @@ fun Dashboard(
     figures: List<Figure>
 ) {
     val isLoading = figures.isEmpty()
-    Box(modifier) {
 
-        Image(
-            painter = painterResource(R.drawable.splash_background),
-            contentDescription = "Rick and Morty background",
-            modifier = modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
-
+    Scaffold(
+        topBar = { MainAppBar() }
+    ) { innerPadding ->
         Column(
-            Modifier
+            modifier = modifier
+                .background(Color(0xFF2C4D42))
+                .padding(innerPadding)
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                modifier = modifier,
-                text = "All Characters",
-                fontWeight = FontWeight.Bold,
-                fontSize = 30.sp,
-                color = Color.White
-            )
             if (isLoading) {
                 LoadingSpinner(modifier)
             } else {
@@ -82,6 +73,46 @@ fun Dashboard(
                 )
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MainAppBar() {
+
+    val isSearchBarVisible = remember { mutableStateOf(false) }
+
+    if(isSearchBarVisible.value) {
+        TopAppBar(
+            title = { SearchBar() },
+            colors = TopAppBarColors(
+                containerColor = Color(0xFFE8F5E9),
+                scrolledContainerColor = Color(0xFFE8F5E9),
+                navigationIconContentColor = Color.White,
+                titleContentColor = Color.White,
+                actionIconContentColor = Color.White
+            )
+        )
+    } else {
+        TopAppBar(
+            title = {
+                Text(
+                    text = "All Characters",
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1B342C)
+                )
+            },
+            actions = {
+                SearchIcon(isSearchBarVisible)
+            },
+            colors = TopAppBarColors(
+                containerColor = Color(0xFFE8F5E9),
+                scrolledContainerColor = Color(0xFFE8F5E9),
+                navigationIconContentColor = Color.White,
+                titleContentColor = Color.White,
+                actionIconContentColor = Color.White
+            )
+        )
     }
 }
 
@@ -106,23 +137,24 @@ fun FigureCard(
     modifier: Modifier,
     figure: Figure
 ) {
-    var containerColor = Color.White
-    var textColor = Color.Black
-    if(figure.status == "Dead") {
-        containerColor = Color.Red
-        textColor = Color.White
+
+    val containerColor = when (figure.status) {
+        "Alive" -> Color(0xFF53B649)
+        "Dead" -> Color(0xFFE53935)
+        else -> Color(0xFFFDD835)
     }
+
     Card(
         modifier = modifier
-            .padding(4.dp)
+            .padding(8.dp)
             .fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = containerColor),
-        elevation = CardDefaults.cardElevation(4.dp)
+        elevation = CardDefaults.cardElevation(6.dp)
     ) {
         Column(
             modifier = modifier
-                .padding(16.dp)
+                .padding(8.dp)
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.Start
         ) {
@@ -132,41 +164,25 @@ fun FigureCard(
                 modifier = Modifier
                     .aspectRatio(1f)
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp)),
+                    .clip(RoundedCornerShape(12.dp))
+                    .border(2.dp, Color.White, RoundedCornerShape(12.dp)),
                 placeholder = painterResource(R.drawable.placeholder),
                 error = painterResource(R.drawable.placeholder),
                 contentScale = ContentScale.Crop
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                color = textColor,
+                //color = textColor,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 text = figure.name
             )
             Text(
-                color = textColor,
-                text = figure.status
+                //color = textColor,
+                text = figure.status,
+                style = MaterialTheme.typography.bodyMedium
             )
         }
-    }
-}
-
-@Composable
-fun ThemedLoadingSpinner(modifier: Modifier) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        AsyncImage(
-            model = R.drawable.loading_spinner,
-            contentDescription = "Loading",
-            modifier = modifier.size(80.dp)
-        )
-        CircularProgressIndicator(
-            color = Color(0xFF53B649),
-            strokeWidth = 4.dp,
-            modifier = modifier.size(40.dp)
-        )
     }
 }
 
@@ -180,6 +196,54 @@ fun LoadingSpinner(modifier: Modifier) {
             color = Color.White
         )
     }
+}
+
+@Composable
+fun SearchIcon(isSearchBarVisible: MutableState<Boolean>) {
+    IconButton(
+        onClick = {
+            isSearchBarVisible.value = !isSearchBarVisible.value
+        },
+    ) {
+        Icon(
+            imageVector = Icons.Default.Search,
+            contentDescription = "Search",
+            tint = Color(0xFF1B342C)
+        )
+    }
+}
+
+@Composable
+fun SearchBar() {
+
+    val searchQuery = remember { mutableStateOf("") }
+
+    TextField(
+        value = searchQuery.value,
+        onValueChange = { searchQuery.value = it },
+        placeholder = { Text("Search...") },
+        singleLine = true,
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = "Search Icon",
+                tint = Color(0xFF1B342C)
+            )
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color.White)
+            .border(1.dp, Color(0xFF1B342C), RoundedCornerShape(24.dp))
+            .padding(horizontal = 8.dp),
+        colors = TextFieldDefaults.colors(
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            focusedContainerColor = Color.Transparent,
+            unfocusedContainerColor = Color.Transparent
+        )
+    )
 }
 
 @Preview
