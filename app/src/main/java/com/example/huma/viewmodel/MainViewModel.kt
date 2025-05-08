@@ -7,6 +7,7 @@ import com.example.huma.data.Figure
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -18,15 +19,24 @@ class MainViewModel @Inject constructor(
     private val _figures = MutableStateFlow<List<Figure>>(emptyList())
     val figures: StateFlow<List<Figure>> = _figures
 
+    val searchQuery = MutableStateFlow("")
+
     private fun getFigures() {
         viewModelScope.launch {
             try {
                 _figures.value = figureRepository.getFigures()
             } catch(e: Exception) {
-                // Handle the error
                 e.printStackTrace()
                 _figures.value = emptyList()
             }
+        }
+    }
+
+    val filteredFigures = combine(_figures, searchQuery) { figure, query ->
+        if(query.isBlank()) {
+            figure
+        } else {
+            figure.filter { it.name.contains(query, ignoreCase = true) }
         }
     }
 

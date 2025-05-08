@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -51,22 +52,17 @@ import com.example.huma.data.Figure
 @Composable
 fun Dashboard(
     modifier: Modifier,
-    figures: List<Figure>
+    figures: List<Figure>,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
+    onFigureClick: (Figure) -> Unit
 ) {
 
-    val isLoading = figures.isEmpty()
-    val searchQuery = remember { mutableStateOf("") }
-    val filteredFigures = remember(searchQuery.value, figures) {
-        if(searchQuery.value.isBlank()) figures
-        else {
-            figures.filter { figure ->
-                figure.name.contains(searchQuery.value, ignoreCase = true)
-            }
-        }
-    }
+    val isLoading = figures.isEmpty() && searchQuery.isBlank()
+    val noResult = figures.isEmpty() && searchQuery.isNotBlank()
 
     Scaffold(
-        topBar = { MainAppBar(searchQuery) }
+        topBar = { MainAppBar(searchQuery, onSearchQueryChange) }
     ) { innerPadding ->
         Column(
             modifier = modifier
@@ -75,27 +71,44 @@ fun Dashboard(
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            when {
+                isLoading -> LoadingSpinner(modifier)
+                noResult -> NoResultFound(modifier)
+                else -> DisplayFigures(modifier, figures, onFigureClick)
+            }
             if (isLoading) {
                 LoadingSpinner(modifier)
             } else {
                 DisplayFigures(
                     modifier,
-                    filteredFigures
+                    figures,
+                    onFigureClick
                 )
             }
         }
     }
 }
 
+@Composable
+fun NoResultFound(modifier: Modifier) {
+    Text(
+        textAlign = TextAlign.Center,
+        text = "Result is not found!",
+        color = Color.White,
+        style = MaterialTheme.typography.titleMedium,
+        modifier = modifier.padding(16.dp)
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainAppBar(searchQuery: MutableState<String>) {
+fun MainAppBar(searchQuery: String, onSearchQueryChange: (String) -> Unit) {
     val isSearchBarVisible = remember { mutableStateOf(false) }
 
     TopAppBar(
         title = {
-            if(isSearchBarVisible.value) {
-                SearchBar(searchQuery)
+            if (isSearchBarVisible.value) {
+                SearchBar(searchQuery, onSearchQueryChange)
             } else {
                 Text(
                     text = "All Characters",
@@ -105,7 +118,10 @@ fun MainAppBar(searchQuery: MutableState<String>) {
             }
         },
         actions = {
-            SearchIcon(isSearchBarVisible)
+            SearchAndExit(
+                isSearchBarVisible,
+                onClearSearch = { onSearchQueryChange("") }
+            )
         },
         colors = TopAppBarColors(
             containerColor = Color(0xFFE8F5E9),
@@ -120,7 +136,8 @@ fun MainAppBar(searchQuery: MutableState<String>) {
 @Composable
 fun DisplayFigures(
     modifier: Modifier,
-    figures: List<Figure>
+    figures: List<Figure>,
+    onFigureClick: (Figure) -> Unit
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
@@ -128,7 +145,7 @@ fun DisplayFigures(
     ) {
         items(figures.size) { index ->
             val figure = figures[index]
-            FigureCard(modifier, figure)
+            FigureCard(modifier, figure, onFigureClick)
         }
     }
 }
@@ -136,7 +153,8 @@ fun DisplayFigures(
 @Composable
 fun FigureCard(
     modifier: Modifier,
-    figure: Figure
+    figure: Figure,
+    onFigureClick: (Figure) -> Unit
 ) {
 
     val containerColor = when (figure.status) {
@@ -151,7 +169,8 @@ fun FigureCard(
             .fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = containerColor),
-        elevation = CardDefaults.cardElevation(6.dp)
+        elevation = CardDefaults.cardElevation(6.dp),
+        onClick = { onFigureClick(figure) }
     ) {
         Column(
             modifier = modifier
@@ -200,34 +219,48 @@ fun LoadingSpinner(modifier: Modifier) {
 }
 
 @Composable
+fun SearchAndExit(isSearchBarVisible: MutableState<Boolean>, onClearSearch: () -> Unit) {
+    if(isSearchBarVisible.value) ExitIcon(isSearchBarVisible, onClearSearch)
+    else SearchIcon(isSearchBarVisible)
+}
+
+@Composable
 fun SearchIcon(isSearchBarVisible: MutableState<Boolean>) {
     IconButton(
         onClick = {
             isSearchBarVisible.value = !isSearchBarVisible.value
         },
     ) {
-        if(isSearchBarVisible.value) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "Close Search",
-                tint = Color(0xFF1B342C)
-            )
-        } else {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = "Search",
-                tint = Color(0xFF1B342C)
-            )
-        }
+        Icon(
+            imageVector = Icons.Default.Search,
+            contentDescription = "Search",
+            tint = Color(0xFF1B342C)
+        )
     }
 }
 
 @Composable
-fun SearchBar(searchQuery: MutableState<String>) {
+fun ExitIcon(isSearchBarVisible: MutableState<Boolean>, onClearSearch: () -> Unit) {
+    IconButton(
+        onClick = {
+            isSearchBarVisible.value = !isSearchBarVisible.value
+            onClearSearch()
+        }
+    ) {
+        Icon(
+            imageVector = Icons.Default.Close,
+            contentDescription = "Close Search",
+            tint = Color(0xFF1B342C)
+        )
+    }
+}
+
+@Composable
+fun SearchBar(searchQuery: String, onSearchQueryChange: (String) -> Unit) {
 
     TextField(
-        value = searchQuery.value,
-        onValueChange = { searchQuery.value = it },
+        value = searchQuery,
+        onValueChange = onSearchQueryChange,
         placeholder = { Text("Search...") },
         singleLine = true,
         leadingIcon = {
@@ -257,6 +290,6 @@ fun SearchBar(searchQuery: MutableState<String>) {
 @Composable
 fun DashboardPreview() {
     HumaTheme {
-        Dashboard(modifier = Modifier.fillMaxSize(), mutableListOf())
+        Dashboard(modifier = Modifier.fillMaxSize(), listOf(), "Morty", {}, {})
     }
 }

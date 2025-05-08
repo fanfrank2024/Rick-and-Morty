@@ -68,6 +68,7 @@ dependencies {
     implementation(libs.coil)
     implementation(libs.accompanist.flowlayout)
     implementation(libs.coil.gif)
+    implementation(libs.compose.navigation)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
