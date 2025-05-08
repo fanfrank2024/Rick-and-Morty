@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -52,10 +53,20 @@ fun Dashboard(
     modifier: Modifier,
     figures: List<Figure>
 ) {
+
     val isLoading = figures.isEmpty()
+    val searchQuery = remember { mutableStateOf("") }
+    val filteredFigures = remember(searchQuery.value, figures) {
+        if(searchQuery.value.isBlank()) figures
+        else {
+            figures.filter { figure ->
+                figure.name.contains(searchQuery.value, ignoreCase = true)
+            }
+        }
+    }
 
     Scaffold(
-        topBar = { MainAppBar() }
+        topBar = { MainAppBar(searchQuery) }
     ) { innerPadding ->
         Column(
             modifier = modifier
@@ -69,7 +80,7 @@ fun Dashboard(
             } else {
                 DisplayFigures(
                     modifier,
-                    figures
+                    filteredFigures
                 )
             }
         }
@@ -78,42 +89,32 @@ fun Dashboard(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainAppBar() {
-
+fun MainAppBar(searchQuery: MutableState<String>) {
     val isSearchBarVisible = remember { mutableStateOf(false) }
 
-    if(isSearchBarVisible.value) {
-        TopAppBar(
-            title = { SearchBar() },
-            colors = TopAppBarColors(
-                containerColor = Color(0xFFE8F5E9),
-                scrolledContainerColor = Color(0xFFE8F5E9),
-                navigationIconContentColor = Color.White,
-                titleContentColor = Color.White,
-                actionIconContentColor = Color.White
-            )
-        )
-    } else {
-        TopAppBar(
-            title = {
+    TopAppBar(
+        title = {
+            if(isSearchBarVisible.value) {
+                SearchBar(searchQuery)
+            } else {
                 Text(
                     text = "All Characters",
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF1B342C)
                 )
-            },
-            actions = {
-                SearchIcon(isSearchBarVisible)
-            },
-            colors = TopAppBarColors(
-                containerColor = Color(0xFFE8F5E9),
-                scrolledContainerColor = Color(0xFFE8F5E9),
-                navigationIconContentColor = Color.White,
-                titleContentColor = Color.White,
-                actionIconContentColor = Color.White
-            )
+            }
+        },
+        actions = {
+            SearchIcon(isSearchBarVisible)
+        },
+        colors = TopAppBarColors(
+            containerColor = Color(0xFFE8F5E9),
+            scrolledContainerColor = Color(0xFFE8F5E9),
+            navigationIconContentColor = Color.White,
+            titleContentColor = Color.White,
+            actionIconContentColor = Color.White
         )
-    }
+    )
 }
 
 @Composable
@@ -172,13 +173,13 @@ fun FigureCard(
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                //color = textColor,
+                color = Color.White,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 text = figure.name
             )
             Text(
-                //color = textColor,
+                color = Color.White,
                 text = figure.status,
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -205,18 +206,24 @@ fun SearchIcon(isSearchBarVisible: MutableState<Boolean>) {
             isSearchBarVisible.value = !isSearchBarVisible.value
         },
     ) {
-        Icon(
-            imageVector = Icons.Default.Search,
-            contentDescription = "Search",
-            tint = Color(0xFF1B342C)
-        )
+        if(isSearchBarVisible.value) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Close Search",
+                tint = Color(0xFF1B342C)
+            )
+        } else {
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = "Search",
+                tint = Color(0xFF1B342C)
+            )
+        }
     }
 }
 
 @Composable
-fun SearchBar() {
-
-    val searchQuery = remember { mutableStateOf("") }
+fun SearchBar(searchQuery: MutableState<String>) {
 
     TextField(
         value = searchQuery.value,
@@ -250,6 +257,6 @@ fun SearchBar() {
 @Composable
 fun DashboardPreview() {
     HumaTheme {
-        Dashboard(modifier = Modifier.fillMaxSize(), listOf())
+        Dashboard(modifier = Modifier.fillMaxSize(), mutableListOf())
     }
 }
