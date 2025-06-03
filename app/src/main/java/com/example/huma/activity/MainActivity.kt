@@ -12,6 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.huma.compose.Dashboard
+import com.example.huma.compose.FigureDetail
 import com.example.huma.ui.theme.HumaTheme
 import com.example.huma.viewmodel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -47,7 +48,12 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("detail/{figureId}") { navBackStackEntry ->
                         val figureId = navBackStackEntry.arguments?.getString("figureId")
-                        //DetailScreen(figureId = figureId)
+                        val figures by viewModel.filteredFigures.collectAsState(initial = emptyList())
+                        FigureDetail(
+                            figureId = figureId ?: "",
+                            figures = figures,
+                            onBack = { navController.popBackStack() }
+                        )
                     }
                 }
 

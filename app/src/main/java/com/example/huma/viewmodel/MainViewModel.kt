@@ -32,7 +32,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    val filteredFigures = combine(_figures, searchQuery) { figure, query ->
+    val filteredFigures = combine(figures, searchQuery) { figure, query ->
         if(query.isBlank()) {
             figure
         } else {
